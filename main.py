@@ -44,11 +44,8 @@ def client_review(message):
     comment = message.text
     return comment
 
-
 @bot.message_handler(content_types=['text'])
 def start(message):
-    print(message.text)
-   # if message.text.lower == 'записаться':
     markup=types.InlineKeyboardMarkup(row_width = 2)
 
     item1=types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
@@ -67,7 +64,7 @@ def callback(call):
             phone_number = 'Рады звонку в любое время \n8 800 555 35 35'
             markup = types.InlineKeyboardMarkup(row_width=1)
             bot.edit_message_text(chat_id=call.message.chat.id,
-                                  message_id=call.message.id, text=f'\n{phone_number} \n\n введи "/start" для возврата в меню',
+                                  message_id=call.message.id, text=f'\n{phone_number} \n\nдля возврата в меню отправь сообщение',
                                   reply_markup=markup)
 
         elif call.data == 'about_us':
@@ -76,7 +73,7 @@ def callback(call):
             item1 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             markup.add(item1)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                                  text=f'\nМы супер студия, ниже можно посмотреть {text} \n\n введи "/start" для возврата в меню',
+                                  text=f'\nМы супер студия, ниже можно посмотреть {text} \n\nдля возврата в меню отправь сообщение',
                                   parse_mode='Markdown', reply_markup=markup)
 
         elif call.data == 'sing_up':
@@ -88,7 +85,7 @@ def callback(call):
             item5 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             markup.add(item1, item2, item3, item4, item5)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                                  text='\nПора определиться с услугой \n\n введи "/start" для возврата в меню',
+                                  text='\nПора определиться с услугой \n\nдля возврата в меню отправь сообщение',
                                   reply_markup=markup)
 
         elif call.data == 'choose_service':
@@ -100,7 +97,7 @@ def callback(call):
             item5 = types.InlineKeyboardButton('Назад', callback_data='choose_master')
             markup.add(item1, item2, item3, item4, item5)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                                  text='\nПора определиться с услугой \n\n введи "/start" для возврата в меню',
+                                  text='\nПора определиться с услугой \n\nдля возврата в меню отправь сообщение',
                                   reply_markup=markup)
 
 
@@ -110,10 +107,10 @@ def callback(call):
             item2 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item3 = types.InlineKeyboardButton('Назад', callback_data='sing_up')
             markup.add(item1, item2, item3)
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nСтоимость маникюра - 5000 \n\n введи "/start" для возврата в меню',
+            sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                             text='\nСтоимость маникюра - 5000 \n\nдля возврата в меню отправь сообщение',
                              reply_markup=markup)
-            price = 5000
+
 
         elif call.data == 'makeup':
             markup = types.InlineKeyboardMarkup(row_width=2)
@@ -121,10 +118,9 @@ def callback(call):
             item2 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item3 = types.InlineKeyboardButton('Назад', callback_data='sing_up')
             markup.add(item1, item2, item3)
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nСтоимость мейкапа - 4000 \n\n введи "/start" для возврата в меню',
+            sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                             text='\nСтоимость мейкапа - 4000 \n\nдля возврата в меню отправь сообщение',
                              reply_markup=markup)
-            price = 4000
 
         elif call.data == 'coloring':
             markup = types.InlineKeyboardMarkup(row_width=2)
@@ -132,10 +128,9 @@ def callback(call):
             item2 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item3 = types.InlineKeyboardButton('Назад', callback_data='sing_up')
             markup.add(item1, item2, item3)
-            bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,
-                             text='\nСтоимость покраски волос - 10000 \n\n введи "/start" для возврата в меню',
+            sent = bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,
+                             text='\nСтоимость покраски волос - 10000 \n\nдля возврата в меню отправь сообщение',
                              reply_markup=markup)
-            price = 10000
 
         elif call.data == 'choose_date':
             all_dates = []
@@ -152,9 +147,9 @@ def callback(call):
             item2 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item3 = types.InlineKeyboardButton("Назад", callback_data='sing_up')
             markup.add(*item1)
-            markup.add(item2, item3)#, item4, item5, item6, item7)
+            markup.add(item2, item3)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nвыбери дату \n\n введи "/start" для возврата в меню', reply_markup=markup)
+                             text='\nвыбери дату \n\nдля возврата в меню отправь сообщение', reply_markup=markup)
 
 
         elif call.data == 'choose_master':
@@ -165,7 +160,7 @@ def callback(call):
             item4 = types.InlineKeyboardButton("Назад", callback_data='choose_date')
             markup.add(item1, item2, item3, item4)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nвыбери мастера \n\n введи "/start" для возврата в меню', reply_markup=markup)
+                             text='\nвыбери мастера \n\nдля возврата в меню отправь сообщение', reply_markup=markup)
 
 
 
@@ -188,7 +183,7 @@ def callback(call):
             markup.add(item7, item8)
 
             sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nвыбери время \n\n введи "/start" для возврата в меню', reply_markup=markup)
+                             text='\nвыбери время \n\nдля возврата в меню отправь сообщение', reply_markup=markup)
             bot.register_next_step_handler(sent, master1)
 
 
@@ -210,7 +205,7 @@ def callback(call):
             markup.add(*item6)
             markup.add(item7, item8)
             sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nвыбери время \n\n введи "/start" для возврата в меню', reply_markup=markup)
+                             text='\nвыбери время \n\n для возврата в меню отправь сообщение', reply_markup=markup)
             bot.register_next_step_handler(sent, master2)
 
 
@@ -277,7 +272,7 @@ def callback(call):
             print(f'имя {name}, мастер {master_name}, отзыв: {comment}')
 
         elif 'оплата' in call.data:
-            bot.send_message(f'Хоть вы и уменьшили свой кошелек на {price} рублей, зато вы будете красивее!')
+            bot.send_message(f'Хоть твой кошелек и похудел, зато ты будешь красивее!') #Добавить стоимость услуги
 
 
 
