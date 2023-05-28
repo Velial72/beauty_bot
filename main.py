@@ -9,7 +9,6 @@ import time
 import json
 import signal
 from unittest.mock import call
-
 import telebot
 from telebot import types
 from dotenv import load_dotenv
@@ -17,18 +16,49 @@ from dotenv import load_dotenv
 load_dotenv()
 token = os.getenv('TELEGRAM_BOT_API_TOKEN')
 bot = telebot.TeleBot(token)
-name = ''
+
+
+def review(message):
+    global name
+    global phone
+    name = message.text.split(' ')[0]
+    phone = message.text.split(' ')[1]
+    return name, phone
+
+def master1(message):
+    global master
+    master = 'Татьяне'
+    return master
+
+def master2(message):
+    global master
+    master = 'Ольге'
+    return master
+def choose_time(message):
+    global time_in
+    time_in = message.text.split('#')[-1]
+    return time_in
+
+def client_review(message):
+    global comment
+    comment = message.text
+    return comment
+
+
 @bot.message_handler(content_types=['text'])
 def start(message):
-    if message.text.lower == 'записаться' or 'домой':
-        markup=types.InlineKeyboardMarkup(row_width = 2)
-        item1=types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
-        item2=types.InlineKeyboardButton('О нас', callback_data='about_us')
-        item3=types.InlineKeyboardButton('Записаться', callback_data='sing_up')
-        item4=types.InlineKeyboardButton('Оставить отзыв', callback_data='leave_review')
-        markup.add(item1, item2, item3, item4)
+    print(message.text)
+   # if message.text.lower == 'записаться':
+    markup=types.InlineKeyboardMarkup(row_width = 2)
 
-        bot.send_message(message.chat.id, '\nвыбери нужный пункт', reply_markup=markup)
+    item1=types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
+    item2=types.InlineKeyboardButton('О нас', callback_data='about_us')
+    item3=types.InlineKeyboardButton('Записаться', callback_data='sing_up')
+    item4=types.InlineKeyboardButton('Оставить отзыв', callback_data='leave_review')
+    markup.add(item1, item2, item3, item4)
+
+    bot.send_message(message.chat.id, '\nвыбери нужный пункт', reply_markup=markup)
+
 
 @bot.callback_query_handler(func=lambda call:True)
 def callback(call):
@@ -37,7 +67,7 @@ def callback(call):
             phone_number = 'Рады звонку в любое время \n8 800 555 35 35'
             markup = types.InlineKeyboardMarkup(row_width=1)
             bot.edit_message_text(chat_id=call.message.chat.id,
-                                  message_id=call.message.id, text=f'\n{phone_number} \n\n введи "домой" для возврата в меню',
+                                  message_id=call.message.id, text=f'\n{phone_number} \n\n введи "/start" для возврата в меню',
                                   reply_markup=markup)
 
         elif call.data == 'about_us':
@@ -46,7 +76,7 @@ def callback(call):
             item1 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             markup.add(item1)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                                  text=f'\nМы супер студия, ниже можно посмотреть {text} \n\n введи "домой" для возврата в меню',
+                                  text=f'\nМы супер студия, ниже можно посмотреть {text} \n\n введи "/start" для возврата в меню',
                                   parse_mode='Markdown', reply_markup=markup)
 
         elif call.data == 'sing_up':
@@ -58,7 +88,7 @@ def callback(call):
             item5 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             markup.add(item1, item2, item3, item4, item5)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                                  text='\nПора определиться с услугой \n\n введи "домой" для возврата в меню',
+                                  text='\nПора определиться с услугой \n\n введи "/start" для возврата в меню',
                                   reply_markup=markup)
 
         elif call.data == 'choose_service':
@@ -70,9 +100,9 @@ def callback(call):
             item5 = types.InlineKeyboardButton('Назад', callback_data='choose_master')
             markup.add(item1, item2, item3, item4, item5)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                                  text='\nПора определиться с услугой \n\n введи "домой" для возврата в меню',
+                                  text='\nПора определиться с услугой \n\n введи "/start" для возврата в меню',
                                   reply_markup=markup)
-    #elif message.text == 'Оставить отзыв': #!!!!!!!!!!!!
+
 
         elif call.data == 'manicure':
             markup = types.InlineKeyboardMarkup(row_width=2)
@@ -81,8 +111,9 @@ def callback(call):
             item3 = types.InlineKeyboardButton('Назад', callback_data='sing_up')
             markup.add(item1, item2, item3)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nСтоимость маникюра - 5000 \n\n введи "домой" для возврата в меню',
+                             text='\nСтоимость маникюра - 5000 \n\n введи "/start" для возврата в меню',
                              reply_markup=markup)
+            price = 5000
 
         elif call.data == 'makeup':
             markup = types.InlineKeyboardMarkup(row_width=2)
@@ -91,8 +122,9 @@ def callback(call):
             item3 = types.InlineKeyboardButton('Назад', callback_data='sing_up')
             markup.add(item1, item2, item3)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nСтоимость мейкапа - 4000 \n\n введи "домой" для возврата в меню',
+                             text='\nСтоимость мейкапа - 4000 \n\n введи "/start" для возврата в меню',
                              reply_markup=markup)
+            price = 4000
 
         elif call.data == 'coloring':
             markup = types.InlineKeyboardMarkup(row_width=2)
@@ -101,22 +133,29 @@ def callback(call):
             item3 = types.InlineKeyboardButton('Назад', callback_data='sing_up')
             markup.add(item1, item2, item3)
             bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,
-                             text='\nСтоимость покраски волос - 10000 \n\n введи "домой" для возврата в меню',
+                             text='\nСтоимость покраски волос - 10000 \n\n введи "/start" для возврата в меню',
                              reply_markup=markup)
+            price = 10000
 
         elif call.data == 'choose_date':
+            all_dates = []
+            current_date = date.today()
+            new_day = current_date
+            all_dates.append(current_date.strftime("%d.%m"))
+            for i in range(1, 30):
+                next_day = new_day + datetime.timedelta(days=1)
+                new_day = next_day
+                all_dates.append(next_day.strftime("%d.%m"))
+
             markup = types.InlineKeyboardMarkup(row_width=6)
-            item1 = types.InlineKeyboardButton('1', callback_data='choose_master')
-            item2 = types.InlineKeyboardButton('2', callback_data='choose_master')
-            item3 = types.InlineKeyboardButton('3', callback_data='choose_master')
-            item4 = types.InlineKeyboardButton('4', callback_data='choose_master')
-            item5 = types.InlineKeyboardButton('5', callback_data='choose_master')
-            item6 = types.InlineKeyboardButton('6', callback_data='choose_master')
-            item7 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
-            item8 = types.InlineKeyboardButton("Назад", callback_data='sing_up')
-            markup.add(item1, item2, item3, item4, item5, item6, item7, item8)
+            item1 = [types.InlineKeyboardButton(f'{date_sing}', callback_data='choose_master') for date_sing in all_dates]
+            item2 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
+            item3 = types.InlineKeyboardButton("Назад", callback_data='sing_up')
+            markup.add(*item1)
+            markup.add(item2, item3)#, item4, item5, item6, item7)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nвыбери дату \n\n введи "домой" для возврата в меню', reply_markup=markup)
+                             text='\nвыбери дату \n\n введи "/start" для возврата в меню', reply_markup=markup)
+
 
         elif call.data == 'choose_master':
             markup = types.InlineKeyboardMarkup(row_width=1)
@@ -126,46 +165,120 @@ def callback(call):
             item4 = types.InlineKeyboardButton("Назад", callback_data='choose_date')
             markup.add(item1, item2, item3, item4)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nвыбери мастера \n\n введи "домой" для возврата в меню', reply_markup=markup)
+                             text='\nвыбери мастера \n\n введи "/start" для возврата в меню', reply_markup=markup)
 
-        elif call.data == 'Татьяна':
+
+
+        elif 'Татьяна' in call.data:
             markup = types.InlineKeyboardMarkup(row_width=6)
-            item1 = types.InlineKeyboardButton('09:00', callback_data='entry')
-            item2 = types.InlineKeyboardButton('09:30', callback_data='entry')
-            item3 = types.InlineKeyboardButton('10:00', callback_data='entry')
-            item4 = types.InlineKeyboardButton('10:30', callback_data='entry')
-            item5 = types.InlineKeyboardButton('11:00', callback_data='entry')
-            item6 = types.InlineKeyboardButton('11:30', callback_data='entry')
+            item1 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(7, 11)]
+            item2 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(7, 11)]
+            item3 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(11, 15)]
+            item4 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(11, 15)]
+            item5 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(15, 18)]
+            item6 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(15, 18)]
             item7 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item8 = types.InlineKeyboardButton("Назад", callback_data='choose_master')
-            markup.add(item1, item2, item3, item4, item5, item6, item7, item8)
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nвыбери время \n\n введи "домой" для возврата в меню', reply_markup=markup)
+            markup.add(*item1)
+            markup.add(*item2)
+            markup.add(*item3)
+            markup.add(*item4)
+            markup.add(*item5)
+            markup.add(*item6)
+            markup.add(item7, item8)
 
-        elif call.data == 'Ольга':
+            sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                             text='\nвыбери время \n\n введи "/start" для возврата в меню', reply_markup=markup)
+            bot.register_next_step_handler(sent, master1)
+
+
+        elif 'Ольга' in call.data:
             markup = types.InlineKeyboardMarkup(row_width=6)
-            item1 = types.InlineKeyboardButton('09:00', callback_data='entry')
-            item2 = types.InlineKeyboardButton('09:30', callback_data='entry')
-            item3 = types.InlineKeyboardButton('10:00', callback_data='entry')
-            item4 = types.InlineKeyboardButton('10:30', callback_data='entry')
-            item5 = types.InlineKeyboardButton('11:00', callback_data='entry')
-            item6 = types.InlineKeyboardButton('11:30', callback_data='entry')
+            item1 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(7, 11)]
+            item2 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(7, 11)]
+            item3 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(11, 15)]
+            item4 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(11, 15)]
+            item5 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(15, 18)]
+            item6 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(15, 18)]
             item7 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item8 = types.InlineKeyboardButton("Назад", callback_data='choose_master')
-            markup.add(item1, item2, item3, item4, item5, item6, item7, item8)
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                             text='\nвыбери время \n\n введи "домой" для возврата в меню', reply_markup=markup)
+            markup.add(*item1)
+            markup.add(*item2)
+            markup.add(*item3)
+            markup.add(*item4)
+            markup.add(*item5)
+            markup.add(*item6)
+            markup.add(item7, item8)
+            sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                             text='\nвыбери время \n\n введи "/start" для возврата в меню', reply_markup=markup)
+            bot.register_next_step_handler(sent, master2)
 
-    # проблема с возвратом от мастера
 
-        elif call.data == 'entry':
+
+        elif 'entry' in call.data:
             markup = types.InlineKeyboardMarkup(row_width=6)
-            item1 = types.InlineKeyboardButton('Продолжить', callback_data='save')
+            item1 = types.InlineKeyboardButton('Продолжить', callback_data='your_sing')
             item2 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             markup.add(item1, item2)
 
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
-                                  text='\nВведи имя и номер телефона \n\n введи "домой" для возврата в меню', reply_markup=markup)
+            sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                  text='\nВведи имя и номер телефона \n\n нажимая продолжить, вы даете согласие на обработку персональных данных',
+                                         reply_markup=markup)
+            bot.register_next_step_handler(sent, review)
+
+        elif 'your_sing' in call.data:
+            markup = types.InlineKeyboardMarkup(row_width=1)
+            item1 = types.InlineKeyboardButton('Оплатить', callback_data='оплата')
+            markup.add(item1)
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id, text=f'\n{name}, вы записаны к {master}. '
+                                                                                                 f'Ждем вас в по адресу: улица красивых 23'
+                                                                                                 f'\n\n если хотите оплатить сразу, нажмите "Оплатить"',
+                                  reply_markup=markup)
+
+
+        elif 'leave_review' in call.data:
+            markup = types.InlineKeyboardMarkup(row_width=2)
+            item1 = types.InlineKeyboardButton('Ольга', callback_data='мастер#1')
+            item2 = types.InlineKeyboardButton('Татьяна', callback_data='мастер#2')
+            markup.add(item1, item2)
+
+            sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                         text='\nОтправьте имя и телефон \n\n затем выбирете мастера', reply_markup=markup)
+
+            bot.register_next_step_handler(sent, review)
+
+
+        elif 'мастер' in call.data:
+            if call.data.split('#')[-1] == '1':
+                markup = types.InlineKeyboardMarkup(row_width=1)
+                item1 = types.InlineKeyboardButton('Оставить отзыв', callback_data='отзыв#1')
+                markup.add(item1)
+                sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                             text='\nнапишите отзыв', reply_markup=markup)
+                bot.register_next_step_handler(sent, client_review)
+
+            elif call.data.split('#')[-1] == '2':
+                markup = types.InlineKeyboardMarkup(row_width=1)
+                item1 = types.InlineKeyboardButton('Оставить отзыв', callback_data='отзыв#2')
+                markup.add(item1)
+                sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+                                             text='\nнапишите отзыв', reply_markup=markup)
+                bot.register_next_step_handler(sent, client_review)
+
+        elif 'отзыв' in call.data:
+            markup = types.InlineKeyboardMarkup(row_width=1)
+            bot.sendmessage(call.message.chat.id, '\nспасибо за ваш отзыв\n\n если хотите оплатить сразу, нажмите "Оплатить"',
+                                  reply_markup=markup)
+            if call.data.split('#')[-1] == '1':
+                master_name = 'Ольга'
+            elif call.data.split('#')[-1] == '2':
+                master_name = 'Татьяна'
+
+            print(f'имя {name}, мастер {master_name}, отзыв: {comment}')
+
+        elif 'оплата' in call.data:
+            bot.send_message(f'Хоть вы и уменьшили свой кошелек на {price} рублей, зато вы будете красивее!')
+
 
 
 
