@@ -3,12 +3,8 @@ import sqlite3
 
 import datetime
 from datetime import date
-import sys
-import logging
 import time
-import json
-import signal
-from unittest.mock import call
+from pathlib import Path
 import telebot
 from telebot import types
 from dotenv import load_dotenv
@@ -17,12 +13,19 @@ load_dotenv()
 token = os.getenv('TELEGRAM_BOT_API_TOKEN')
 bot = telebot.TeleBot(token)
 
+conn = sqlite3.connect('db.sqlite3', check_same_thread=False)
+cursor = conn.cursor()
+
+params = []
 
 def review(message):
     global name
     global phone
     name = message.text.split(' ')[0]
     phone = message.text.split(' ')[1]
+    params.append(name)
+    params.append(phone)
+
     return name, phone
 
 def master1(message):
@@ -44,10 +47,15 @@ def client_review(message):
     comment = message.text
     return comment
 
+def bd_table_val(id: int, name: str, master: str, service: str, price: int, visit_time: str):
+    cursor.execute('INSERT INTO salon_salon(name, master, service, price, visit_time) VALUES (?,?,?,?,?)',
+                   (params[-2], params[3], params[0], params[1], params[2]))
+    conn.commit()
+
 @bot.message_handler(content_types=['text'])
 def start(message):
-    markup=types.InlineKeyboardMarkup(row_width = 2)
 
+    markup=types.InlineKeyboardMarkup(row_width = 2)
     item1=types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
     item2=types.InlineKeyboardButton('О нас', callback_data='about_us')
     item3=types.InlineKeyboardButton('Записаться', callback_data='sing_up')
@@ -102,33 +110,39 @@ def callback(call):
 
 
         elif call.data == 'manicure':
+            params.append('маникюр')
+            params.append(4000)
             markup = types.InlineKeyboardMarkup(row_width=2)
             item1 = types.InlineKeyboardButton('Выбрать дату', callback_data='choose_date')
             item2 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item3 = types.InlineKeyboardButton('Назад', callback_data='sing_up')
             markup.add(item1, item2, item3)
-            sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
                              text='\nСтоимость маникюра - 5000 \n\nдля возврата в меню отправь сообщение',
                              reply_markup=markup)
 
 
         elif call.data == 'makeup':
+            params.append('мейкап')
+            params.append(5000)
             markup = types.InlineKeyboardMarkup(row_width=2)
             item1 = types.InlineKeyboardButton('Выбрать дату', callback_data='choose_date')
             item2 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item3 = types.InlineKeyboardButton('Назад', callback_data='sing_up')
             markup.add(item1, item2, item3)
-            sent = bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id,
                              text='\nСтоимость мейкапа - 4000 \n\nдля возврата в меню отправь сообщение',
                              reply_markup=markup)
 
         elif call.data == 'coloring':
+            params.append('покраска')
+            params.append(10000)
             markup = types.InlineKeyboardMarkup(row_width=2)
             item1 = types.InlineKeyboardButton('Выбрать дату', callback_data='choose_date')
             item2 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item3 = types.InlineKeyboardButton('Назад', callback_data='sing_up')
             markup.add(item1, item2, item3)
-            sent = bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,
+            bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,
                              text='\nСтоимость покраски волос - 10000 \n\nдля возврата в меню отправь сообщение',
                              reply_markup=markup)
 
@@ -143,7 +157,7 @@ def callback(call):
                 all_dates.append(next_day.strftime("%d.%m"))
 
             markup = types.InlineKeyboardMarkup(row_width=6)
-            item1 = [types.InlineKeyboardButton(f'{date_sing}', callback_data='choose_master') for date_sing in all_dates]
+            item1 = [types.InlineKeyboardButton(f'{date_sing}', callback_data=f'choose_master#{date_sing}') for date_sing in all_dates]
             item2 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item3 = types.InlineKeyboardButton("Назад", callback_data='sing_up')
             markup.add(*item1)
@@ -152,7 +166,8 @@ def callback(call):
                              text='\nвыбери дату \n\nдля возврата в меню отправь сообщение', reply_markup=markup)
 
 
-        elif call.data == 'choose_master':
+        elif 'choose_master' in call.data:
+            params.append(call.data.split('#')[-1])
             markup = types.InlineKeyboardMarkup(row_width=1)
             item1 = types.InlineKeyboardButton('Ольга', callback_data='Ольга')
             item2 = types.InlineKeyboardButton('Татьяна', callback_data='Татьяна')
@@ -165,13 +180,14 @@ def callback(call):
 
 
         elif 'Татьяна' in call.data:
+            params.append('Татьяна')
             markup = types.InlineKeyboardMarkup(row_width=6)
-            item1 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(7, 11)]
-            item2 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(7, 11)]
-            item3 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(11, 15)]
-            item4 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(11, 15)]
-            item5 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(15, 18)]
-            item6 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(15, 18)]
+            item1 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}:00') for hour in range(7, 11)]
+            item2 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}:30') for hour in range(7, 11)]
+            item3 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}:00') for hour in range(11, 15)]
+            item4 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}:30') for hour in range(11, 15)]
+            item5 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}:00') for hour in range(15, 18)]
+            item6 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}:30') for hour in range(15, 18)]
             item7 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item8 = types.InlineKeyboardButton("Назад", callback_data='choose_master')
             markup.add(*item1)
@@ -188,13 +204,14 @@ def callback(call):
 
 
         elif 'Ольга' in call.data:
+            params.append('Ольга')
             markup = types.InlineKeyboardMarkup(row_width=6)
-            item1 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(7, 11)]
-            item2 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(7, 11)]
-            item3 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(11, 15)]
-            item4 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(11, 15)]
-            item5 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}') for hour in range(15, 18)]
-            item6 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}') for hour in range(15, 18)]
+            item1 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}:00') for hour in range(7, 11)]
+            item2 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}:30') for hour in range(7, 11)]
+            item3 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}:00') for hour in range(11, 15)]
+            item4 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}:30') for hour in range(11, 15)]
+            item5 = [types.InlineKeyboardButton(f'{hour+1}:00', callback_data=f'entry#{hour+1}:00') for hour in range(15, 18)]
+            item6 = [types.InlineKeyboardButton(f'{hour+1}:30', callback_data=f'entry#{hour+1}:30') for hour in range(15, 18)]
             item7 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
             item8 = types.InlineKeyboardButton("Назад", callback_data='choose_master')
             markup.add(*item1)
@@ -211,6 +228,7 @@ def callback(call):
 
 
         elif 'entry' in call.data:
+            params.append(call.data.split('#')[-1])
             markup = types.InlineKeyboardMarkup(row_width=6)
             item1 = types.InlineKeyboardButton('Продолжить', callback_data='your_sing')
             item2 = types.InlineKeyboardButton('Связаться с салоном', callback_data='call_us')
@@ -225,10 +243,14 @@ def callback(call):
             markup = types.InlineKeyboardMarkup(row_width=1)
             item1 = types.InlineKeyboardButton('Оплатить', callback_data='оплата')
             markup.add(item1)
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id, text=f'\n{name}, вы записаны к {master}. '
-                                                                                                 f'Ждем вас в по адресу: улица красивых 23'
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.id, text=f'\n{params[-2]}, вы записаны к {master}. '
+                                                                                                 f'Ждем вас {params[2]} в {params[-3]} по адресу: улица красивых 23'
+                                                                                                 f'\nВы записаны на услугу: "{params[0]}", стоимость: {params[1]}'
                                                                                                  f'\n\n если хотите оплатить сразу, нажмите "Оплатить"',
                                   reply_markup=markup)
+
+            bd_table_val(id= 1, name= params[-2], master= params[3], service= params[0], price= params[1], visit_time= params[2, -3])
+            print(params)
 
 
         elif 'leave_review' in call.data:
