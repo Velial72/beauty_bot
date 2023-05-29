@@ -4,7 +4,7 @@ import sqlite3
 import datetime
 from datetime import date
 import time
-from pathlib import Path
+
 import telebot
 from telebot import types
 from dotenv import load_dotenv
@@ -12,8 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 token = os.getenv('TELEGRAM_BOT_API_TOKEN')
 bot = telebot.TeleBot(token)
-
-conn = sqlite3.connect('db.sqlite3', check_same_thread=False)
+conn = sqlite3.connect('beauty_salon/db.sqlite3', check_same_thread=False)
 cursor = conn.cursor()
 
 params = []
@@ -249,7 +248,7 @@ def callback(call):
                                                                                                  f'\n\n если хотите оплатить сразу, нажмите "Оплатить"',
                                   reply_markup=markup)
 
-            bd_table_val(id= 1, name= params[-2], master= params[3], service= params[0], price= params[1], visit_time= params[2, -3])
+            bd_table_val(id= 1, name= params[-2], master= params[3], service= params[0], price= params[1], visit_time= params[2])
             print(params)
 
 
